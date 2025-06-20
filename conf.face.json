@@ -1,0 +1,85 @@
+{
+    "database": {
+        "src": "C:\\Users\\migue\\code\\memobook-wx\\archive.db",
+        "table": "bookmarks",
+        "scan": [
+            "C:\\Users\\migue\\help"
+        ]
+    },
+    "mime": {
+        "Text": [
+            ".txt"
+        ],
+        "Image": [
+            ".blp",
+            ".bmp",
+            ".cur",
+            ".dcx",
+            ".dds",
+            ".dib",
+            ".eps",
+            ".fli",
+            ".flc",
+            ".fpx",
+            ".ftex",
+            ".gbr",
+            ".gd",
+            ".gif",
+            ".icns",
+            ".ico",
+            ".im",
+            ".imt",
+            ".jpeg",
+            ".jpg",
+            ".mic",
+            ".mpo",
+            ".msp",
+            ".pcd",
+            ".pcx",
+            ".pixar",
+            ".png",
+            ".ppm",
+            ".psd",
+            ".sgi",
+            ".tga",
+            ".tiff",
+            ".wal",
+            ".xbm",
+            ".xpm"
+        ],
+        "PDF": [
+            ".pdf"
+        ]
+    },
+    "font": {
+        "face": "Calibri",
+        "size": "10",
+        "family": "74",
+        "slant": "normal",
+        "style": "thisstyle",
+        "weight": "normal",
+        "underlined": "false",
+        "strikethrough": "false",
+        "antialiased": false
+    },
+    "tkfont": {
+        "family": "FreeSans",
+        "size": 10,
+        "weight": "normal"
+    },
+    "style": {
+        "theme": "default",
+        "font": {
+            "size": 0
+        }
+    },
+    "wrap": "word",
+    "index": "C:\\Users\\migue\\code\\memobook-wx\\wxtmp\\index.xml",
+    "save": "C:\\Users\\migue\\code\\memobook-wx\\transition\\help\\audiovideo",
+    "open": "C:\\Users\\migue\\code\\memobook-wx",
+    "loc": "./conf.xml",
+    "x": 864,
+    "y": 277,
+    "xmanage": 480,
+    "ymanage": 320
+}
