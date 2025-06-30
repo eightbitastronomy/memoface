@@ -7,10 +7,12 @@ from wxface.facestate import FaceState
 from wxface.wxfileloader import wxFileLoader
 from wxface.wxfilefilterer import wxFileFilterer
 from wxface.wxitemfilterer import wxItemFilterer
+from wxface.wxfilterpanel import wxFilterPanel
 from wxface.wxitemchooser import wxItemChooser
 from wxface.wxconfigurepanel import wxConfigurePanel
 from wxface.modifier import Modifier
 from wxface.manager import Manager
+from wxface.filter import Filter
 
 
 
@@ -25,6 +27,11 @@ def get_fake_dirs():
     
 def get_fake_backups():
     return ["backup_0000", "backup_0001", "backup_0002", "backup_0003"]
+
+def update_adder_contents(list1, widget1, list2, widget2):
+    widget1.set(list1)
+    widget2.set(list2)
+
 
 toggler = True
 
@@ -161,8 +168,6 @@ class wxManager(wx.Frame):
                                 width=wx.Size(self.size.GetWidth(), 
                                     int((self.size.GetHeight()-self._modep.GetSize().GetHeight())/2)))
         # Modify Record
-        self._fileloader = wxFileLoader(self._workp)
-        self._fileloader.Hide()
         self._markmod = wxItemAdder(self._workp,
                                 self.table_marks,
                                 label="Available Mark(s):",
@@ -181,27 +186,42 @@ class wxManager(wx.Frame):
                                 tocright=get_fake_types(),
                                 labelright="Existing Type(s):")
         self._typemod.Hide()
+        self._fileloader = wxFileLoader(self._workp, 
+                                        callback=lambda x, y: update_adder_contents(x, 
+                                                                                    self._markmod,
+                                                                                    y,
+                                                                                    self._typemod),
+                                        callserv=lambda x: self.server_targeted_search(x))
+        self._fileloader.Hide()
         # Remove Record
-        self._rem_label = wx.StaticText(self._workp,
-                                        wx.ID_ANY,
-                                        label = "Include?",
-                                        style = wx.LEFT)
-        self._rem_label.Hide()
-        self._rem_filef = wxFileFilterer(self._workp)
-        self._rem_filef.Hide()
-        self._rem_markf = wxItemFilterer(self._workp,
-                                        self.table_marks,
-                                        default="By Mark:")
-        self._rem_markf.Hide()
-        self._rem_typef = wxItemFilterer(self._workp,
-                                        self.table_types,
-                                        default="By Type:")
-        self._rem_typef.Hide()
-        self._rem_warn = wx.StaticText(self._workp,
-                                        wx.ID_ANY,
-                                        label = "Removals must match all selected criteria.",
-                                        style = wx.LEFT)
-        self._rem_warn.Hide()
+        #self._rem_label = wx.StaticText(self._workp,
+        #                                wx.ID_ANY,
+        #                                label = "Include?",
+        #                                style = wx.LEFT)
+        #self._rem_label.Hide()
+        #self._rem_filef = wxFileFilterer(self._workp)
+        #self._rem_filef.Hide()
+        #self._rem_markf = wxItemFilterer(self._workp,
+        #                                self.table_marks,
+        #                                default="By Mark:")
+        #self._rem_markf.Hide()
+        #self._rem_typef = wxItemFilterer(self._workp,
+        #                                self.table_types,
+        #                                default="By Type:")
+        #self._rem_typef.Hide()
+        #self._rem_warn = wx.StaticText(self._workp,
+        #                                wx.ID_ANY,
+        #                                label = "Removals must match all selected criteria.",
+        #                                style = wx.LEFT)
+        #self._rem_warn.Hide()
+        self._rem_panel = wxFilterPanel(self._workp,
+                                        filelabel="By File:",
+                                        marktable=self.table_marks,
+                                        marklabel="By Mark:",
+                                        typetable=self.table_types,
+                                        typelabel="By Type:"
+                                        )
+        self._rem_panel.Hide()
         # Import
         #   using _fileloader for import file
         backupinfo = json.loads(self.serv.interface.Repositories())
@@ -276,11 +296,12 @@ class wxManager(wx.Frame):
         work_sizer.Add(self._fileloader, 0, wx.EXPAND, 0)
         work_sizer.Add(self._markmod, 0, wx.EXPAND, 0)
         work_sizer.Add(self._typemod, 0, wx.EXPAND, 0)
-        work_sizer.Add(self._rem_label, 0, wx.LEFT, 0)
-        work_sizer.Add(self._rem_filef, 0, wx.EXPAND, 0)
-        work_sizer.Add(self._rem_markf, 0, wx.EXPAND, 0)
-        work_sizer.Add(self._rem_typef, 0, wx.EXPAND, 0)
-        work_sizer.Add(self._rem_warn, 0, wx.LEFT, 0)
+        #work_sizer.Add(self._rem_label, 0, wx.LEFT, 0)
+        #work_sizer.Add(self._rem_filef, 0, wx.EXPAND, 0)
+        #work_sizer.Add(self._rem_markf, 0, wx.EXPAND, 0)
+        #work_sizer.Add(self._rem_typef, 0, wx.EXPAND, 0)
+        #work_sizer.Add(self._rem_warn, 0, wx.LEFT, 0)
+        work_sizer.Add(self._rem_panel, 0, wx.LEFT, 0)
         work_sizer.Add(self._import_log, 0, wx.EXPAND, 0)
         work_sizer.Add(self._import_opt_link, 0, wx.EXPAND, 0)
         work_sizer.Add(self._import_incl, 0, wx.EXPAND, 0)
@@ -300,11 +321,12 @@ class wxManager(wx.Frame):
         self._fileloader.Hide()
         self._markmod.Hide()
         self._typemod.Hide()
-        self._rem_label.Hide()
-        self._rem_filef.Hide()
-        self._rem_markf.Hide()
-        self._rem_typef.Hide()
-        self._rem_warn.Hide()
+        #self._rem_label.Hide()
+        #self._rem_filef.Hide()
+        #self._rem_markf.Hide()
+        #self._rem_typef.Hide()
+        #self._rem_warn.Hide()
+        self._rem_panel.Hide()
         self._import_log.Hide()
         self._import_opt_link.Hide()
         self._import_incl.Hide()
@@ -328,11 +350,12 @@ class wxManager(wx.Frame):
         self._export_loader.Hide()
         self._backup.Hide()
         #self._general.Hide()
-        self._rem_label.Hide()
-        self._rem_filef.Hide()
-        self._rem_markf.Hide()
-        self._rem_typef.Hide()
-        self._rem_warn.Hide()
+        #self._rem_label.Hide()
+        #self._rem_filef.Hide()
+        #self._rem_markf.Hide()
+        #self._rem_typef.Hide()
+        #self._rem_warn.Hide()
+        self._rem_panel.Hide()
         self._file.Hide()
         self._fileloader.Show()
         self._mark.Hide()
@@ -358,11 +381,12 @@ class wxManager(wx.Frame):
         self._export_loader.Hide()
         self._backup.Hide()
         #self._general.Hide()
-        self._rem_label.Show()
-        self._rem_filef.Show()
-        self._rem_markf.Show()
-        self._rem_typef.Show()
-        self._rem_warn.Show()
+        #self._rem_label.Show()
+        #self._rem_filef.Show()
+        #self._rem_markf.Show()
+        #self._rem_typef.Show()
+        #self._rem_warn.Show()
+        self._rem_panel.Show()
         self.__apply_hook = self.apply_rem_rec
         self.main_sizer.Layout()
         return True
@@ -379,11 +403,12 @@ class wxManager(wx.Frame):
         self._import_opt_link.Show()
         self._import_incl.Show()
         self._import_excl.Show()
-        self._rem_label.Hide()
-        self._rem_filef.Hide()
-        self._rem_markf.Hide()
-        self._rem_typef.Hide()
-        self._rem_warn.Hide()
+        #self._rem_label.Hide()
+        #self._rem_filef.Hide()
+        #self._rem_markf.Hide()
+        #self._rem_typef.Hide()
+        #self._rem_warn.Hide()
+        self._rem_panel.Hide()
         self._export_loader.Hide()
         self._backup.Hide()
         #self._general.Hide()
@@ -403,11 +428,12 @@ class wxManager(wx.Frame):
         self._import_opt_link.Hide()
         self._import_incl.Hide()
         self._import_excl.Hide()
-        self._rem_label.Hide()
-        self._rem_filef.Hide()
-        self._rem_markf.Hide()
-        self._rem_typef.Hide()
-        self._rem_warn.Hide()
+        #self._rem_label.Hide()
+        #self._rem_filef.Hide()
+        #self._rem_markf.Hide()
+        #self._rem_typef.Hide()
+        #self._rem_warn.Hide()
+        self._rem_panel.Hide()
         self._backup.Hide()
         #self._general.Hide()
         self._export_loader.Show()
@@ -426,11 +452,12 @@ class wxManager(wx.Frame):
         self._import_log.Hide()
         self._import_incl.Hide()
         self._import_excl.Hide()
-        self._rem_label.Hide()
-        self._rem_filef.Hide()
-        self._rem_markf.Hide()
-        self._rem_typef.Hide()
-        self._rem_warn.Hide()
+        #self._rem_label.Hide()
+        #self._rem_filef.Hide()
+        #self._rem_markf.Hide()
+        #self._rem_typef.Hide()
+        #self._rem_warn.Hide()
+        self._rem_panel.Hide()
         self._export_loader.Hide()
         #self._general.Hide()
         self._backup.Show()
@@ -449,11 +476,12 @@ class wxManager(wx.Frame):
         self._import_log.Hide()
         self._import_incl.Hide()
         self._import_excl.Hide()
-        self._rem_label.Hide()
-        self._rem_filef.Hide()
-        self._rem_markf.Hide()
-        self._rem_typef.Hide()
-        self._rem_warn.Hide()
+        #self._rem_label.Hide()
+        #self._rem_filef.Hide()
+        #self._rem_markf.Hide()
+        #self._rem_typef.Hide()
+        #self._rem_warn.Hide()
+        self._rem_panel.Hide()
         self._export_loader.Hide()
         self._backup.Hide()
         #self._general.Show()
@@ -469,8 +497,10 @@ class wxManager(wx.Frame):
 
     def apply_add_rec(self, func):
         ready_files = self._file.get_files()
-        ready_marks = self._mark.get()
-        ready_types = self._type.get()
+        # get returns (tocright, additions, removals), but need only additions here: 
+        # (May delete tocright from the return in the future)
+        ready_marks = self._mark.get()[1] 
+        ready_types = self._type.get()[1]
         if (ready_files == []) or (ready_marks == []) or (ready_types == []):
             with wx.MessageDialog(self,
                                     "All fields must have values for a record to be added.",
@@ -498,13 +528,25 @@ class wxManager(wx.Frame):
     
     
     def apply_mod_rec(self, func):
-        ready_files = list(filter(None, self._fileloader.get_file()))
-        ready_marks = list(filter(None, self._markmod.get()))
-        ready_types = list(filter(None, self._typemod.get()))
-        if (ready_files == []) or (ready_marks == []) or (ready_types == []):
+        ready_file = self._fileloader.get_file()
+        # it doesn't appear that the "orig" lists are needed, holding off on removing them
+        marks_orig, buf_marks_add, buf_marks_rem = self._markmod.get()
+        marks_add = list(filter(None, buf_marks_add))
+        marks_rem = list(filter(None, buf_marks_rem))
+        types_orig, buf_types_add, buf_types_rem = self._typemod.get()
+        types_add = list(filter(None, buf_types_add))
+        types_rem = list(filter(None, buf_types_rem))
+        if not ready_file:
             with wx.MessageDialog(self,
-                                    "All fields must have values for a record to be added.",
-                                    caption="Add Record",
+                                    "A file must be specified in order for its records to be modified.",
+                                    caption="Modify Record",
+                                    style=wx.OK | wx.CENTRE) as message:
+                message.ShowModal()
+            return
+        if (marks_add is None and marks_rem is None) and (types_add is None and types_rem is None):
+            with wx.MessageDialog(self,
+                                    "At least one field must have changes for a record to be modified.",
+                                    caption="Modify Record",
                                     style=wx.OK | wx.CENTRE) as message:
                 message.ShowModal()
             return
@@ -514,82 +556,134 @@ class wxManager(wx.Frame):
         # So, process(oldmarks, newmarks) might return "mark add 1 this rem 2 that then" e.g.
         if func("modification of this record") == wx.ID_OK:
             ###debug output
-            print("mod record: file is " + str(ready_files))
-            print("mod record: marks are " + str(ready_marks))
-            print("mod record: types are " + str(ready_types))
+            print("mod record: file is " + ready_file)
+            print("mod record: mark orig are " + str(marks_orig))
+            print("mod record: mark adds are " + str(marks_add))
+            print("mod record: mark rems are " + str(marks_rem))
+            print("mod record: type orig are " + str(types_orig))
+            print("mod record: type adds are " + str(types_add))
+            print("mod record: type rems are " + str(types_rem))
             if self.serv:
-                adder = Modifier()
-                adder.mode_add_record()
-                adder.set_files(ready_files)
-                adder.set_marks(ready_marks)
-                adder.set_types(ready_types)
-                self.serv.interface.Modify(adder.form())
+                #adder = Modifier()
+                #adder.mode_add_record()
+                #adder.set_files([ready_files])
+                #adder.set_marks(ready_marks)
+                #adder.set_types(ready_types)
+                #self.serv.interface.Modify(adder.form())
+                print("Beginning mark mod")
+                if marks_add or marks_rem:
+                    marker = Modifier()
+                    marker.mode_mark_update()
+                    marker.set_files([ready_file])
+                    marker.set_aux(types_orig)
+                    marker.set_add(marks_add)
+                    marker.set_rem(marks_rem)
+                    cmd = marker.form()
+                    if cmd:
+                        print("Sending dbus request: " + str(cmd))
+                        self.serv.interface.Modify(cmd)
+                print("Mark mod done. Beginning type mod")
+                if types_add or types_rem:
+                    typer = Modifier()
+                    typer.mode_type_update()
+                    typer.set_files([ready_file])
+                    typer.set_aux(marks_orig)
+                    typer.set_add(types_add)
+                    typer.set_rem(types_rem)
+                    cmd = typer.form()
+                    if cmd:
+                        print("Sending dbus request: " + str(cmd))
+                        self.serv.interface.Modify(cmd)
+                print("Type mod done.")
+        return
     
-    
+
     def apply_rem_rec(self, func):
-        ready_files = []
-        ready_marks = []
-        ready_types = []
-        temptotalchecks = 0
-        tempmultiflag = False
-        if self._rem_filef.is_checked():
-            temptotalchecks += 1
-            ready_files = self._rem_filef.get_files()
-            if len(ready_files) > 1:
-                tempmultiflag = True
-        if self._rem_markf.is_checked():
-            temptotalchecks += 1
-            ready_marks = self._rem_markf.get_selection()
-            if len(ready_files) > 1:
-                tempmultiflag = True
-        if self._rem_typef.is_checked():
-            temptotalchecks += 1
-            ready_types = self._rem_typef.get_selection()
-            if len(ready_files) > 1:
-                tempmultiflag = True
-        if temptotalchecks != 1:
-            with wx.MessageDialog(self,
-                                    "Under construction: only one criterion may be applied at a time.",
-                                    caption="Remove Record",
-                                    style=wx.OK | wx.CENTRE) as messtotal:
-                messtotal.ShowModal()
-            return
-        if tempmultiflag:
-            with wx.MessageDialog(self,
-                                    "Under construction: select only one value from the list.",
-                                    caption="Remove Record",
-                                    style=wx.OK | wx.CENTRE) as messnumval:
-                messnumval.ShowModal()
-            return
-        if (ready_files == []) and (ready_marks == []) and (ready_types == []):
-            with wx.MessageDialog(self,
-                                    "At least one search parameter is required for a record to be removed.",
-                                    caption="Remove Record",
-                                    style=wx.OK | wx.CENTRE) as message:
-                message.ShowModal()
-            return
-        else:
+        ready_type, ready_vals = self._rem_panel.get_values()
+        if ready_type and ready_vals:
             if func("removal of any applicable records") == wx.ID_OK:
-            # If a field is checked but selection is empty, drop from the filter
-                remover = Modifer()
+                remover = Modifier()
                 remover.mode_target_remove()
-                if ready_files:
-                    remover.set_field("file")
-                    remover.set_fieldtarg(ready_files[0])
-                    ###debug output
-                    print("File filter: " + str(ready_files))
-                if ready_marks:
-                    remover.set_field("mark")
-                    remover.set_fieldtarg(ready_marks[0])
-                    ###debug output
-                    print("Mark filter: " + str(ready_marks))
-                if ready_types:
-                    remover.set_field("type")
-                    remover.set_files(ready_types[0])
-                    ###debug output
-                    print("Type filter: " + str(ready_types))
+                remover.set_field(ready_type)
+                remover.set_field_target(ready_vals[0])
+                ###debug output
+                print("Type filter: " + str(ready_type))
+                print("Vals: " + str(ready_vals[0]))
                 self.serv.interface.Modify(remover.form())
         return
+       
+
+# I have abandoned the following because the complexity of deleting db records
+# based on 1, 2, or 3 criteria is too great, especially if the user cannot 
+# choose between "and" and "or" logic for the values of each single criterion.
+# To expect the user to figure out the behavior is unacceptable, as removals
+# are not undo-able. To write up an instruction manual for how to use a 
+# remove-record function also seems a bit excessive.
+# ALSO, THIS FUNCTION IS NOT TESTED AND PROBABLY CONTAINS ERRORS
+#    def apply_rem_rec(self, func):
+#        ready_files = []
+#        ready_marks = []
+#        ready_types = []
+#        temptotalchecks = 0
+#        tempmultiflag = False
+#        if self._rem_filef.is_checked():
+#            temptotalchecks += 1
+#            ready_files = self._rem_filef.get_files()
+#            if len(ready_files) > 1:
+#                tempmultiflag = True
+#        if self._rem_markf.is_checked():
+#            temptotalchecks += 1
+#            ready_marks = self._rem_markf.get_selection()
+#            if len(ready_files) > 1:
+#                tempmultiflag = True
+#        if self._rem_typef.is_checked():
+#            temptotalchecks += 1
+#            ready_types = self._rem_typef.get_selection()
+#            if len(ready_files) > 1:
+#                tempmultiflag = True
+#        if temptotalchecks != 1:
+#            with wx.MessageDialog(self,
+#                                    "Under construction: only one criterion may be applied at a time.",
+#                                    caption="Remove Record",
+#                                    style=wx.OK | wx.CENTRE) as messtotal:
+#                messtotal.ShowModal()
+#            return
+#        if tempmultiflag:
+#            with wx.MessageDialog(self,
+#                                    "Under construction: select only one value from the list.",
+#                                    caption="Remove Record",
+#                                    style=wx.OK | wx.CENTRE) as messnumval:
+#                messnumval.ShowModal()
+#            return
+#        if (ready_files == []) and (ready_marks == []) and (ready_types == []):
+#            with wx.MessageDialog(self,
+#                                    "At least one search parameter is required for a record to be removed.",
+#                                    caption="Remove Record",
+#                                    style=wx.OK | wx.CENTRE) as message:
+#                message.ShowModal()
+#            return
+#        else:
+#            if func("removal of any applicable records") == wx.ID_OK:
+#            # If a field is checked but selection is empty, drop from the filter
+#                remover = Modifier()
+#                remover.mode_target_remove()
+#                if ready_files:
+#                    remover.set_field("file")
+#                    remover.set_field_target(ready_files[0])
+#                    ###debug output
+#                    print("File filter: " + str(ready_files))
+#                if ready_marks:
+#                    remover.set_field("mark")
+#                    remover.set_field_target(ready_marks[0])
+#                    ###debug output
+#                    print("Mark filter: " + str(ready_marks))
+#                if ready_types:
+#                    remover.set_field("type")
+#                    remover.set_files(ready_types[0])
+#                    ###debug output
+#                    print("Type filter: " + str(ready_types))
+#                self.serv.interface.Modify(remover.form())
+#        return
         
         
     def apply_import(self, func):
@@ -781,6 +875,24 @@ class wxManager(wx.Frame):
                     return False # the addrecord routine will be canceled
         else:
             return True # the addrecord routine will continue
+
+
+    def server_targeted_search(self, fname):
+        searchmarks = Filter()
+        searchmarks.add_files([fname])
+        searchmarks.set_equality("mark")
+        buffermarks = self.serv.interface.Search(searchmarks.form())
+        resmarks = []
+        if buffermarks:
+            resmarks = buffermarks.split(", ")
+        searchtypes = Filter()
+        searchtypes.add_files([fname])
+        searchtypes.set_equality("type")
+        buffertypes = self.serv.interface.Search(searchtypes.form())
+        restypes = []
+        if buffertypes:
+            restypes = buffertypes.split(", ")
+        return (resmarks, restypes)
 
 
 def is_subdir_of(testpath, refpath):

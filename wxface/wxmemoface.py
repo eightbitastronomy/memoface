@@ -84,6 +84,10 @@ class wxMemoFace(wx.Frame):
         self.toc_files = []
         if globallive:
             self.get_content()
+        else:
+            self.toc_marks = get_toc()
+            self.toc_types = get_types()
+            self.toc_files = get_files()
         self.dsize = wx.Size(globalwidth - self.GetClientSize().GetWidth(), 
                             globalheight - self.GetClientSize().GetHeight())
         self.state = FaceState.FNDFILE
@@ -530,9 +534,8 @@ class wxMemoFace(wx.Frame):
     def spawn_manager(self):
         mgr_window = wxManager(self,
                                 serv=self.serv,
-                                #size=self.size,
-                                mark=get_toc(),
-                                type=get_types())
+                                mark=self.toc_marks,
+                                type=self.toc_types)
         mgr_window.Show()
 
 

@@ -18,6 +18,7 @@ class ModMode(Enum):
     FIELDR = 1
     MARKUP = 2
     TARGRM = 3
+    TYPEUP = 4
 
 
 class Modifier:
@@ -25,10 +26,11 @@ class Modifier:
 
     def __init__(self):
         self.mod = ModMode.ADDREC
-        self.markadd = []
-        self.markrem = []
-        self.types = []
+        self.aux = []
+        self.add = []
+        self.rem = []
         self.files = []
+        self.types = []
         self.field = ""
         self.fieldtarg = ""
         self.fieldnew = ""
@@ -49,6 +51,11 @@ class Modifier:
         return self
 
 
+    def mode_type_update(self):
+        self.mod = ModMode.TYPEUP
+        return self
+
+
     def mode_target_remove(self):
         self.mod = ModMode.TARGRM
         return self
@@ -65,17 +72,22 @@ class Modifier:
 
 
     def set_marks(self, markvec):
-        self.markadd = markvec
+        self.add = markvec
         return self
 
 
-    def set_mark_add(self, markvec):
-        self.markadd = markvec
+    def set_add(self, markvec):
+        self.add = markvec
         return self
 
 
-    def set_mark_rem(self, markvec):
-        self.markrem = markvec
+    def set_rem(self, markvec):
+        self.rem = markvec
+        return self
+
+
+    def set_aux(self, auxvec):
+        self.aux = auxvec
         return self
 
 
@@ -98,10 +110,10 @@ class Modifier:
         runningvec = []
         match self.mod:
             case ModMode.ADDREC:
-                if (len(self.markadd) < 1) or (len(self.types) < 1) or (len(self.files) < 1):
+                if (len(self.add) < 1) or (len(self.types) < 1) or (len(self.files) < 1):
                     return []
                 runningvec.extend(build_single("file", None, self.files))
-                runningvec.extend(build_single("mark", None, self.markadd))
+                runningvec.extend(build_single("mark", None, self.add))
                 runningvec.extend(build_single("type", None, self.types))
                 runningvec.insert(0, str(len(runningvec)))
                 runningvec.insert(0, "addrecord")
@@ -111,16 +123,25 @@ class Modifier:
             case ModMode.MARKUP:
                 if len(self.files) != 1:
                     return []
-                if (len(self.markadd) < 1) or (len(self.markrem) < 1):
-                    return []
-                if (len(self.types) < 1):
+                if (len(self.add) < 1) and(len(self.rem) < 1):
                     return []
                 runningvec.append(self.files[0])
-                runningvec.extend(build_single("add", None, self.markadd))
-                runningvec.extend(build_single("rem", None, self.markrem))
-                runningvec.extend(build_single("type", None, self.files))
+                runningvec.extend(build_single("add", None, self.add))
+                runningvec.extend(build_single("rem", None, self.rem))
+                runningvec.extend(build_single("aux", None, self.aux))
                 runningvec.insert(0, str(len(runningvec)))
                 runningvec.insert(0, "markupdate")
+            case ModMode.TYPEUP:
+                if len(self.files) != 1:
+                    return []
+                if (len(self.add) < 1) and (len(self.rem) < 1):
+                    return []
+                runningvec.append(self.files[0])
+                runningvec.extend(build_single("add", None, self.add))
+                runningvec.extend(build_single("rem", None, self.rem))
+                runningvec.extend(build_single("aux", None, self.aux))
+                runningvec.insert(0, str(len(runningvec)))
+                runningvec.insert(0, "typeupdate")
             case ModMode.TARGRM:
                 runningvec = [ "targetremove", "2", self.field, self.fieldtarg ]
         return runningvec

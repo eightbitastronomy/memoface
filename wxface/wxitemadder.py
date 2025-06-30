@@ -17,9 +17,11 @@ class wxItemAdder(wx.Panel):
             itemslabel = kwargs["label"]
         if "labelright" in kwargs.keys():
             itemsrightlabel = kwargs["labelright"]
-        tocright = []
+        self.tocright = []
         if "tocright" in kwargs.keys():
-            tocright = kwargs["tocright"]
+            self.tocright = kwargs["tocright"]
+        self.__additions = []
+        self.__removals = []
         mode = "add"
         if "mode" in kwargs.keys():
             mode = kwargs["mode"]
@@ -45,7 +47,7 @@ class wxItemAdder(wx.Panel):
                                             list_adder_id,
                                             "Add >")
             self.Bind(wx.EVT_BUTTON, lambda e: self.add_from_box(), self.__listadder_b, list_adder_id)
-            self.__targetlist = wxMarkView(self, [])
+            self.__targetlist = wxMarkView(self, self.tocright)
             target_remove_id = wx.NewId()
             self.__targetrem_b = wx.Button(self,
                                             target_remove_id,
@@ -88,7 +90,7 @@ class wxItemAdder(wx.Panel):
                                             list_adder_id,
                                             "Add >")
             self.Bind(wx.EVT_BUTTON, lambda e: self.add_from_box(), self.__listadder_b, list_adder_id)
-            self.__targetlist = wxMarkView(self, [ MarkViewItem(item, lambda x: x) for item in tocright ])
+            self.__targetlist = wxMarkView(self, [ MarkViewItem(item, lambda x: x) for item in self.tocright ])
             target_remove_id = wx.NewId()
             self.__targetrem_b = wx.Button(self,
                                             target_remove_id,
@@ -109,14 +111,22 @@ class wxItemAdder(wx.Panel):
         self.SetSizer(self.main_sizer)
     
     def add_from_box(self):
-        highlighted = self.__listadder.get_selection_mvi()
-        for item in highlighted:
+        buffer = self.__listadder.get_selection_mvi()
+        for item in buffer:
             self.__targetlist.Insert(item)
+            self.__additions.append(item.txt())
         #self.__targetlist.SetListView(self.__listadder.get_selection_raw())
         self.__listadder.clear_selection()
         
         
     def rem_from_box(self):
+        self.__removals = [] #.extend(self.__targetlist.get_selection())
+        #self.__selection.clear()
+        itemnum = self.__targetlist.GetFirstSelected()
+        while itemnum > -1:
+            buf = self.__targetlist.GetItem(itemnum).GetText()
+            self.__removals.append(buf)
+            itemnum = self.__targetlist.GetNextSelected(itemnum)
         self.__targetlist.remove_selected()
         
     
@@ -127,10 +137,26 @@ class wxItemAdder(wx.Panel):
             items += [ MarkViewItem(x, lambda y: y) for x in self.__item_t.GetLineText(i).split(" ") ]
         for item in items:
             self.__targetlist.Insert(item)
+            self.__additions.append(item.txt())
         
         
+    #def get(self):
+    #    retlist = []
+    #    for i in range(0, self.__targetlist.GetItemCount()):
+    #        retlist.append(self.__targetlist.GetItem(i).GetText())
+    #    return retlist
+
+
+    # Doesn't appear that the self.tocright needs to be returned
     def get(self):
-        retlist = []
-        for i in range(0, self.__targetlist.GetItemCount()):
-            retlist.append(self.__targetlist.GetItem(i).GetText())
-        return retlist
+        if self.__additions and self.__removals:
+            for item in self.__removals:
+                if item in self.__additions:
+                    self.__removals.remove(item)
+                    self.__additions.remove(item)
+        return (self.tocright, self.__additions, self.__removals)
+
+
+    def set(self, items):
+        self.tocright = items
+        self.__targetlist.set_data([MarkViewItem(x, lambda y: y) for x in items])

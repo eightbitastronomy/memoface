@@ -26,6 +26,12 @@ class wxFileLoader(wx.Panel):
         self.main_sizer.AddSpacer(5)
         self.main_sizer.Add(self.__file_l, 1, wx.ALIGN_CENTRE_VERTICAL, 0)
         self.SetSizer(self.main_sizer)
+        self.__serv = None
+        if "callserv" in kwargs.keys():
+            self.__serv = kwargs["callserv"]
+        self.__hook = None
+        if "callback" in kwargs.keys():
+            self.__hook = kwargs["callback"]
         active_dir = ""
         if "active" in kwargs.keys():
             active_dir = kwargs["active"]
@@ -56,8 +62,13 @@ class wxFileLoader(wx.Panel):
                     return
                 file_name = openDialog.GetPath()
         if file_name:
-            label.SetLabel("File: " + file_name)
             self.loaded = file_name
+            if self.__serv:
+                listmarks, listtypes = self.__serv(file_name)
+            if self.__hook:
+                self.__hook(listmarks, listtypes)
+            ###debug output
+            label.SetLabel("File: " + file_name)
     
     
     def get_file(self):
